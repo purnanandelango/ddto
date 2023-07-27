@@ -48,7 +48,7 @@ for stage = 1:num_targ-1
     
     [r,   v,   T,   s,   tvec,   nrm_v,   nrm_T,...
      rbar,vbar,Tbar,sbar,tvecbar,nrm_vbar,nrm_Tbar,...
-     traj_cost,traj_cost_str]                               = disassemble(x,u,tau,xbar,ubar,prb);
+     traj_cost,traj_cost_str]                               = util.disassemble(x,u,tau,xbar,ubar,prb);
 
     rbranch_prev = rbar(:,Kstr,1);
     vbranch_prev = vbar(:,Kstr,1);

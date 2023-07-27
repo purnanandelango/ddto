@@ -1,12 +1,15 @@
 clearvars
 clc
 
-N = 15;
+prb = problem_data_2D(15, ...           % K
+                      10, ...           % scp_iters
+                      10, ...           % wvc
+                      10, ...           % wvb    
+                      0.01, ...         % wtr
+                      0.5);             % cost_factor
 
-prb = problem_data_2D(N,10,25,10,0.01,0.01);
-
-load('recent_solution','x','u','tau');
-[xbar,ubar] = misc.create_initialization(prb,1,x,u,tau);
+% load('recent_solution','x','u','tau');
+[xbar,ubar] = misc.create_initialization(prb,1);%,x,u,tau);
 
 [xbar,ubar] = scp.run_ptr_noparam(xbar,ubar,prb,@sys_cnstr_cost);
 
@@ -15,7 +18,7 @@ load('recent_solution','x','u','tau');
 
 [r,   v,   T,   s,   tvec,   nrm_v,   nrm_T,...
  rbar,vbar,Tbar,sbar,tvecbar,nrm_vbar,nrm_Tbar,...
- traj_cost] = util.disassemble(x,u,tau,xbar,ubar,prb);    
+ traj_cost]                                         = util.disassemble(x,u,tau,xbar,ubar,prb);    
 
 save('recent_solution','r','v','nrm_v','T','nrm_T','s','tvec','x','u','prb','tau',...
                        'rbar','vbar','nrm_vbar','Tbar','nrm_Tbar','sbar','tvecbar','xbar','ubar','traj_cost');

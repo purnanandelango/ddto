@@ -1,0 +1,2 @@
+ - Explictly parametrize the entire trajectory to each of the targets.
+ - Use `Kstr` to mark the index until which trajectories are identical.
