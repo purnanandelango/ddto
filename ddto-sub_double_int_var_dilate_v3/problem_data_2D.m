@@ -1,4 +1,4 @@
-function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
+function prb = problem_data_2D(K,scp_iters,wvc,wtr,cost_factor)
 
     prb.K = K;
 
@@ -8,8 +8,8 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
 
     prb.m = 4;
 
-    prb.nx = (2*prb.n+prb.m)*prb.ntarg;
-    prb.nu = (prb.n+1)*prb.ntarg;
+    prb.nx = (2*prb.n + prb.m)*prb.ntarg;
+    prb.nu = (prb.n + 1)*prb.ntarg;
     prb.np = 0;    
 
     % Convenient indices for state and input associated with trajectories to different targets
@@ -21,8 +21,8 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     for j = 1:prb.ntarg
         prb.idx_r(:,j)   = (j-1)*(2*prb.n+prb.m)+1         : (j-1)*(2*prb.n+prb.m)+prb.n;
         prb.idx_v(:,j)   = (j-1)*(2*prb.n+prb.m)+prb.n+1   : (j-1)*(2*prb.n+prb.m)+2*prb.n;
-        prb.idx_bet(:,j) = (j-1)*(2*prb.n+prb.m)+2*prb.n+1 : j*(2*prb.n+prb.m);
-        prb.idx_T(:,j)   = (j-1)*(prb.n+1)+1               :(j-1)*(prb.n+1)+prb.n;
+        prb.idx_bet(:,j) = (j-1)*(2*prb.n+prb.m)+2*prb.n+1 :  j*(2*prb.n+prb.m);
+        prb.idx_T(:,j)   = (j-1)*(prb.n+1)+1               : (j-1)*(prb.n+1)+prb.n;
         prb.idx_s(j)     = j*(prb.n+1);    
     end    
 
@@ -51,15 +51,15 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     prb.umax = 4;
     prb.umin = 0.5;
 
-    prb.smin     = 0.5;
-    prb.smax     = 20;
-    prb.dtmin    = 0.5;
-    prb.dtmax    = 10;
+    prb.smin     = 0.1;
+    prb.smax     = 8;
+    prb.dtmin    = 0.4;
+    prb.dtmax    = 3;
     prb.ToFmax   = 50;
     prb.dTmax    = 4;
 
-    prb.betmin = zeros(prb.m,1);
-    prb.betmax = [1;
+    prb.betmin = 0.01*ones(prb.m,1);
+    prb.betmax = 0.1*[1;
                   1;
                   1;
                   1];    
@@ -67,14 +67,14 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     prb.snom = [1, 10];
     prb.ToFguess = 15;
 
-    prb.cost_bound = 32*[1,1,1,1];
+    prb.cost_bound = 25*[1,1,1,1];
 
     % Obstacle avoidance
     prb.nobs = 2;
 
     prb.robs = [3  3;
                 0  4];
-    prb.aobs = [2  2];    
+    prb.aobs = [1.9  1.9];    
     
     % Boundary conditions
     prb.r1 = [0; 0];           
@@ -143,7 +143,7 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     % prb.subopt_type = 'sum_quad_u';
     
     prb.wvc = wvc;
-    prb.wvb = wvb; 
+    % prb.wvb = wvb; 
     prb.wtr = wtr;
     prb.cost_factor = cost_factor;
     
@@ -155,7 +155,7 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     prb.time_grid = @(tau,x,s) disc.time_grid(prb.disc,tau,s);    
     
     % Convenient functions for accessing RHS of nonlinear and linearized ODE
-    prb.dyn_func = @(t,x,u) evaluate_dyn_func(x,u,prb.ntarg,prb.n,prb.m,prb.c_d,prb.g,prb.robs,prb.aobs,prb.vmax,prb.umin);
+    prb.dyn_func = @(t,x,u)                    evaluate_dyn_func(x,u,           prb.ntarg,prb.n,prb.m,prb.c_d,prb.g,prb.robs,prb.aobs,prb.vmax,prb.umin);
     prb.dyn_func_linearize = @(tbar,xbar,ubar) evaluate_linearization(xbar,ubar,prb.ntarg,prb.n,prb.m,prb.c_d,prb.g,prb.robs,prb.aobs,prb.vmax,prb.umin);
 
 end
@@ -166,18 +166,18 @@ function dx = evaluate_dyn_func(x,u,ntarg,n,m,c_d,g,robs,aobs,vmax,umin)
     dx = zeros(2*n+m,ntarg);
     for j = 1:ntarg
         dx(:,j) = [plant.doubleint.dyn_func(x(1:2*n,j),u(1:n,j),u(n+1,j),n,c_d,g);
-                       max(0, -norm(x(1:n,j)-robs(:,1)) + aobs(1) )^2;
-                       max(0, -norm(x(1:n,j)-robs(:,2)) + aobs(2) )^2;
-                       max(0, norm(x(n+1:2*n,j))^2 - vmax^2 )^2;
-                       max(0, -norm(u(1:n,j)) + umin )^2]; 
+                   max(0, -norm(x(1:n,j)-robs(:,1)) + aobs(1) )^2;
+                   max(0, -norm(x(1:n,j)-robs(:,2)) + aobs(2) )^2;
+                   max(0,  norm(x(n+1:2*n,j))^2 - vmax^2      )^2;
+                   max(0, -norm(u(1:n,j)) + umin              )^2]; 
     end
     dx = reshape(dx,[(2*n+m)*ntarg,1]);
 end
 
-function [A,B,w] = evaluate_linearization(x,u,ntarg,n,m,c_d,g,robs,aobs,vmax,umin)
-    x = reshape(x,[2*n+m,ntarg]);
-    u = reshape(u,[n+1,ntarg]);
-    dx = evaluate_dyn_func(x,u,ntarg,n,m,c_d,g,robs,aobs,vmax,umin);
+function [A,B,w] = evaluate_linearization(xvec,uvec,ntarg,n,m,c_d,g,robs,aobs,vmax,umin)
+    x = reshape(xvec,[2*n+m,ntarg]);
+    u = reshape(uvec,[n+1,ntarg]);
+    f = evaluate_dyn_func(x,u,ntarg,n,m,c_d,g,robs,aobs,vmax,umin);
     
     A = [];
     B = [];
@@ -186,31 +186,33 @@ function [A,B,w] = evaluate_linearization(x,u,ntarg,n,m,c_d,g,robs,aobs,vmax,umi
         
         cnstr = [-norm(x(1:n,j)-robs(:,1)) + aobs(1);
                  -norm(x(1:n,j)-robs(:,2)) + aobs(2);
-                 norm(x(n+1:2*n,j))^2 - vmax^2;
+                  norm(x(n+1:2*n,j))^2 - vmax^2;
                  -norm(u(1:n,j)) + umin];
-        cnstr_jac_x = [-(x(1:n,j)-robs(:,1))'/norm(x(1:n,j)-robs(:,1)) zeros(1,n);
-                       -(x(1:n,j)-robs(:,2))'/norm(x(1:n,j)-robs(:,2)) zeros(1,n);
-                        zeros(1,n) 2*x(n+1:2*n,j)'
-                        zeros(1,2*n)];
-        cnstr_jac_u = [zeros(1,n+1);
-                       zeros(1,n+1);
-                       zeros(1,n+1);
-                      -u(1:n,j)'/norm(u(1:n,j)) 0];
+        cnstr_jac_state = [-(x(1:n,j)-robs(:,1))'/norm(x(1:n,j)-robs(:,1)) zeros(1,n);
+                           -(x(1:n,j)-robs(:,2))'/norm(x(1:n,j)-robs(:,2)) zeros(1,n);
+                            zeros(1,n) 2*x(n+1:2*n,j)'
+                            zeros(1,2*n)];
+        cnstr_jac_ctrl = [ zeros(1,n+1);
+                           zeros(1,n+1);
+                           zeros(1,n+1);
+                          -u(1:n,j)'/norm(u(1:n,j)) 0];
         
-        A_cnstr = [2*max(cnstr(1),0)*cnstr_jac_x(1,:);
-                   2*max(cnstr(2),0)*cnstr_jac_x(2,:);
-                   2*max(cnstr(3),0)*cnstr_jac_x(3,:);
-                   2*max(cnstr(4),0)*cnstr_jac_x(4,:)];
-        B_cnstr = [2*max(cnstr(1),0)*cnstr_jac_u(1,:);
-                   2*max(cnstr(2),0)*cnstr_jac_u(2,:);
-                   2*max(cnstr(3),0)*cnstr_jac_u(3,:);
-                   2*max(cnstr(4),0)*cnstr_jac_u(4,:)];
+        A_cnstr = [2*max(cnstr(1),0)*cnstr_jac_state(1,:);
+                   2*max(cnstr(2),0)*cnstr_jac_state(2,:);
+                   2*max(cnstr(3),0)*cnstr_jac_state(3,:);
+                   2*max(cnstr(4),0)*cnstr_jac_state(4,:)];
+
+        B_cnstr = [2*max(cnstr(1),0)*cnstr_jac_ctrl(1,:);
+                   2*max(cnstr(2),0)*cnstr_jac_ctrl(2,:);
+                   2*max(cnstr(3),0)*cnstr_jac_ctrl(3,:);
+                   2*max(cnstr(4),0)*cnstr_jac_ctrl(4,:)];
         
         A = blkdiag(A,[Aj,      zeros(2*n,m);
                        A_cnstr, zeros(m,m)]);
+
         B = blkdiag(B,[Bj,Sj;
                        B_cnstr]);
                        
     end
-    w = dx - A*x - B*u;
+    w = f - A*xvec - B*uvec;
 end

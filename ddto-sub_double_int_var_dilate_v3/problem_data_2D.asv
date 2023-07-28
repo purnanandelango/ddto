@@ -1,4 +1,4 @@
-function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
+function prb = problem_data_2D(K,scp_iters,wvc,wtr,cost_factor)
 
     prb.K = K;
 
@@ -8,8 +8,8 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
 
     prb.m = 4;
 
-    prb.nx = (2*prb.n+prb.m)*prb.ntarg;
-    prb.nu = (prb.n+1)*prb.ntarg;
+    prb.nx = (2*prb.n + prb.m)*prb.ntarg;
+    prb.nu = (prb.n + 1)*prb.ntarg;
     prb.np = 0;    
 
     % Convenient indices for state and input associated with trajectories to different targets
@@ -21,8 +21,8 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     for j = 1:prb.ntarg
         prb.idx_r(:,j)   = (j-1)*(2*prb.n+prb.m)+1         : (j-1)*(2*prb.n+prb.m)+prb.n;
         prb.idx_v(:,j)   = (j-1)*(2*prb.n+prb.m)+prb.n+1   : (j-1)*(2*prb.n+prb.m)+2*prb.n;
-        prb.idx_bet(:,j) = (j-1)*(2*prb.n+prb.m)+2*prb.n+1 : j*(2*prb.n+prb.m);
-        prb.idx_T(:,j)   = (j-1)*(prb.n+1)+1               :(j-1)*(prb.n+1)+prb.n;
+        prb.idx_bet(:,j) = (j-1)*(2*prb.n+prb.m)+2*prb.n+1 :  j*(2*prb.n+prb.m);
+        prb.idx_T(:,j)   = (j-1)*(prb.n+1)+1               : (j-1)*(prb.n+1)+prb.n;
         prb.idx_s(j)     = j*(prb.n+1);    
     end    
 
@@ -51,15 +51,15 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     prb.umax = 4;
     prb.umin = 0.5;
 
-    prb.smin     = 0.5;
-    prb.smax     = 20;
-    prb.dtmin    = 0.5;
-    prb.dtmax    = 10;
+    prb.smin     = 0.1;
+    prb.smax     = 8;
+    prb.dtmin    = 0.1;
+    prb.dtmax    = 3;
     prb.ToFmax   = 50;
     prb.dTmax    = 4;
 
-    prb.betmin = zeros(prb.m,1);
-    prb.betmax = [1;
+    prb.betmin = 0.01*ones(prb.m,1);
+    prb.betmax = 0.1*[1;
                   1;
                   1;
                   1];    
@@ -67,14 +67,14 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     prb.snom = [1, 10];
     prb.ToFguess = 15;
 
-    prb.cost_bound = 32*[1,1,1,1];
+    prb.cost_bound = 25*[1,1,1,1];
 
     % Obstacle avoidance
     prb.nobs = 2;
 
     prb.robs = [3  3;
                 0  4];
-    prb.aobs = [2  2];    
+    prb.aobs = [2  ];    
     
     % Boundary conditions
     prb.r1 = [0; 0];           
@@ -127,23 +127,6 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     prb.cx = cz{1};
     prb.cu = cz{2};
 
-    % Scaled constraint parameters
-
-    prb.cnstr_fun       = @(x,u) [-norm(x(1:prb.n)-prb.robs(:,1)) + prb.aobs(1);
-                                  -norm(x(1:prb.n)-prb.robs(:,2)) + prb.aobs(2);
-                                   norm(x(prb.n+1:2*prb.n))^2 - prb.vmax^2;
-                                  -norm(u(1:prb.n)) + prb.umin];
-
-    prb.cnstr_fun_jac_x = @(x,u) [-(x(1:prb.n)-prb.robs(:,1))'/norm(x(1:prb.n)-prb.robs(:,1)) zeros(1,prb.n);
-                                  -(x(1:prb.n)-prb.robs(:,2))'/norm(x(1:prb.n)-prb.robs(:,2)) zeros(1,prb.n);
-                                  zeros(1,prb.n) 2*x(prb.n+1:2*prb.n)'
-                                  zeros(1,2*prb.n)];
-
-    prb.cnstr_fun_jac_u = @(x,u) [zeros(1,prb.n+1);
-                                  zeros(1,prb.n+1);
-                                  zeros(1,prb.n+1);
-                                  -u(1:prb.n)'/norm(u(1:prb.n)) 0];    
-
     % SCP parameters
 
     prb.disc = "FOH";
@@ -160,7 +143,7 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     % prb.subopt_type = 'sum_quad_u';
     
     prb.wvc = wvc;
-    prb.wvb = wvb; 
+    % prb.wvb = wvb; 
     prb.wtr = wtr;
     prb.cost_factor = cost_factor;
     
@@ -172,8 +155,8 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     prb.time_grid = @(tau,x,s) disc.time_grid(prb.disc,tau,s);    
     
     % Convenient functions for accessing RHS of nonlinear and linearized ODE
-    prb.dyn_func = @(t,x,u) evaluate_dyn_func(x,u,prb.ntarg,prb.n,prb.c_d,prb.g);
-    prb.dyn_func_linearize = @(tbar,xbar,ubar) evaluate_linearization(xbar,ubar,prb.ntarg,prb.n,prb.c_d,prb.g);
+    prb.dyn_func = @(t,x,u)                    evaluate_dyn_func(x,u,           prb.ntarg,prb.n,prb.m,prb.c_d,prb.g,prb.robs,prb.aobs,prb.vmax,prb.umin);
+    prb.dyn_func_linearize = @(tbar,xbar,ubar) evaluate_linearization(xbar,ubar,prb.ntarg,prb.n,prb.m,prb.c_d,prb.g,prb.robs,prb.aobs,prb.vmax,prb.umin);
 
 end
 
@@ -183,74 +166,53 @@ function dx = evaluate_dyn_func(x,u,ntarg,n,m,c_d,g,robs,aobs,vmax,umin)
     dx = zeros(2*n+m,ntarg);
     for j = 1:ntarg
         dx(:,j) = [plant.doubleint.dyn_func(x(1:2*n,j),u(1:n,j),u(n+1,j),n,c_d,g);
-                       max(0, -norm(x(1:n,j)-robs(:,1)) + aobs(1) )^2;
-                       max(0, -norm(x(1:n,j)-robs(:,2)) + aobs(2) )^2;
-                       max(0, norm(x(n+1:2*n,j))^2 - vmax^2 )^2;
-                       max(0, -norm(u(1:n,j)) + umin )^2]; 
+                   max(0, -norm(x(1:n,j)-robs(:,1)) + aobs(1) )^2;
+                   max(0, -norm(x(1:n,j)-robs(:,2)) + aobs(2) )^2;
+                   max(0,  norm(x(n+1:2*n,j))^2 - vmax^2      )^2;
+                   max(0, -norm(u(1:n,j)) + umin              )^2]; 
     end
     dx = reshape(dx,[(2*n+m)*ntarg,1]);
 end
 
-function [A,B,w] = evaluate_linearization(x,u,ntarg,n,m,c_d,g,robs,aobs,vmax,umin)
-    x = reshape(x,[2*n+m,ntarg]);
-    u = reshape(u,[n+1,ntarg]);
-    dx = evaluate_dyn_func(x,u,ntarg,n,m,c_d,g,robs,aobs,vmax,umin);
+function [A,B,w] = evaluate_linearization(xvec,uvec,ntarg,n,m,c_d,g,robs,aobs,vmax,umin)
+    x = reshape(xvec,[2*n+m,ntarg]);
+    u = reshape(uvec,[n+1,ntarg]);
+    f = evaluate_dyn_func(x,u,ntarg,n,m,c_d,g,robs,aobs,vmax,umin);
     
     A = [];
     B = [];
     for j = 1:ntarg
         [Aj,Bj,Sj] = plant.doubleint.compute_linearization(x(1:2*n,j),u(1:n,j),u(n+1,j),n,c_d,g);
+        
         cnstr = [-norm(x(1:n,j)-robs(:,1)) + aobs(1);
                  -norm(x(1:n,j)-robs(:,2)) + aobs(2);
-                 norm(x(n+1:2*n,j))^2 - vmax^2;
+                  norm(x(n+1:2*n,j))^2 - vmax^2;
                  -norm(u(1:n,j)) + umin];
-        cnstr_jac_x = [-(x(1:n,j)-robs(:,1))'/norm(x(1:n,j)-robs(:,1)) zeros(1,n);
-                       -(x(1:n,j)-robs(:,2))'/norm(x(1:n,j)-robs(:,2)) zeros(1,n);
-                        zeros(1,n) 2*x(n+1:2*n,j)'
-                        zeros(1,2*n)];
-        cnstr_jac_u = [zeros(1,n+1);
-                       zeros(1,n+1);
-                       zeros(1,n+1);
-                      -u(1:n,j)'/norm(u(1:n,j)) 0];
-        A_cnstr = [2*max(cnstr(1),0)*cnstr_jac_x(1,:);
-                   2*max(cnstr(2),0)*cnstr_jac_x(2,:);
-                   2*max(cnstr(3),0)*cnstr_jac_x(3,:);
-                   2*max(cnstr(4),0)*cnstr_jac_x(4,:)];
-        B_cnstr = [2*max(cnstr(1),0)*cnstr_jac_x(1,:);
-                   2*max(cnstr(2),0)*cnstr_jac_x(2,:);
-                   2*max(cnstr(3),0)*cnstr_jac_x(3,:);
-                   2*max(cnstr(4),0)*cnstr_jac_x(4,:)];
-        A = blkdiag(A,[Aj zeros(2*n,m);
+        cnstr_jac_state = [-(x(1:n,j)-robs(:,1))'/norm(x(1:n,j)-robs(:,1)) zeros(1,n);
+                           -(x(1:n,j)-robs(:,2))'/norm(x(1:n,j)-robs(:,2)) zeros(1,n);
+                            zeros(1,n) 2*x(n+1:2*n,j)'
+                            zeros(1,2*n)];
+        cnstr_jac_ctrl = [ zeros(1,n+1);
+                           zeros(1,n+1);
+                           zeros(1,n+1);
+                          -u(1:n,j)'/norm(u(1:n,j)) 0];
+        
+        A_cnstr = [2*max(cnstr(1),0)*cnstr_jac_state(1,:);
+                   2*max(cnstr(2),0)*cnstr_jac_state(2,:);
+                   2*max(cnstr(3),0)*cnstr_jac_state(3,:);
+                   2*max(cnstr(4),0)*cnstr_jac_state(4,:)];
+
+        B_cnstr = [2*max(cnstr(1),0)*cnstr_jac_ctrl(1,:);
+                   2*max(cnstr(2),0)*cnstr_jac_ctrl(2,:);
+                   2*max(cnstr(3),0)*cnstr_jac_ctrl(3,:);
+                   2*max(cnstr(4),0)*cnstr_jac_ctrl(4,:)];
+        
+        A = blkdiag(A,[Aj,      zeros(2*n,m);
+                       A_cnstr, zeros(m,m)]);
+
+        B = blkdiag(B,[Bj,Sj;
+                       B_cnstr]);
                        
     end
-end
-
-function [A,B,w] = evaluate_linearization(z,u,n,c_d,g,cnstr_fun,cnstr_fun_jac_x,cnstr_fun_jac_u)
-
-    x = z(1:2*n);
-    [dfdx,dfdu,dfds] = plant.doubleint.compute_linearization(x,u(1:n),u(n+1),n,c_d,g);
-    dfdu = [dfdu,dfds];
-
-    cnstr_val = cnstr_fun(x,u);
-    cnstr_val_jac_x = cnstr_fun_jac_x(x,u);
-    cnstr_val_jac_u = cnstr_fun_jac_u(x,u);
-
-    m = length(cnstr_val);
-    absg2 = zeros(m,1);
-    absg2_jac_x = zeros(m,2*n);
-    absg2_jac_u = zeros(m,n+1);
-    for j = 1:m
-        absg2(j) = max(0,cnstr_val(j))^2;
-        if cnstr_val(j) > 0
-            absg2_jac_x(j,:) = 2*cnstr_val(j)*cnstr_val_jac_x(j,:);
-            absg2_jac_u(j,:) = 2*cnstr_val(j)*cnstr_val_jac_u(j,:);
-        end
-    end
-
-    A = [dfdx        zeros(2*n,m);
-         absg2_jac_x zeros(m,m)];
-    B = [dfdu;
-         absg2_jac_u];
-    h = evaluate_dyn_func(z,u,n,c_d,g,cnstr_fun);
-    w = h - A*z - B*u;
+    w = f - A*xvec - B*uvec;
 end
