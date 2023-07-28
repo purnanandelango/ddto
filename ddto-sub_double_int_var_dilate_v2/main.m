@@ -1,12 +1,12 @@
 clearvars
 clc
 
-prb = problem_data_2D(15, ...           % K
+prb = problem_data_2D(14, ...           % K
                       10, ...           % scp_iters
-                      10, ...           % wvc
+                      20, ...           % wvc
                       10, ...           % wvb    
                       0.01, ...         % wtr
-                      0.5);             % cost_factor
+                      0.1);             % cost_factor
 
 % load('recent_solution','x','u','tau');
 [xbar,ubar] = misc.create_initialization(prb,1);%,x,u,tau);

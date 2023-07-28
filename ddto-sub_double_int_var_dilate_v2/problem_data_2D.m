@@ -47,24 +47,24 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     prb.umax = 4;
     prb.umin = 0.5;
 
-    prb.smin     = 0.5;
-    prb.smax     = 20;
-    prb.dtmin    = 0.5;
-    prb.dtmax    = 10;
+    prb.smin     = 0.1;
+    prb.smax     = 16;
+    prb.dtmin    = 0.4;
+    prb.dtmax    = 3;
     prb.ToFmax   = 50;
     prb.dTmax    = 4;
 
     prb.snom = [1, 10];
     prb.ToFguess = 15;
 
-    prb.cost_bound = 32*[1,1,1,1];
+    prb.cost_bound = 25*[1,1,1,1];
 
     % Obstacle avoidance
     prb.nobs = 2;
 
     prb.robs = [3  3;
                 0  4];
-    prb.aobs = [2  2];    
+    prb.aobs = [1.9  2];    
     
     % Boundary conditions
     prb.r1 = [0; 0];           
@@ -103,7 +103,7 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     umax = reshape([prb.umax*ones(prb.n,1), prb.umax*ones(prb.n,1), prb.umax*ones(prb.n,1), prb.umax*ones(prb.n,1);
                     prb.snom(2),            prb.snom(2),            prb.snom(2),            prb.snom(2)],[prb.nu,1]);
 
-    [Sz,cz] = misc.generate_scaling({[xmin,xmax],[umin,umax]},[-1,1]);
+    [Sz,cz] = misc.generate_scaling({[xmin,xmax],[umin,umax]},[0,1]);
 
     prb.Sx = Sz{1}; prb.invSx = inv(Sz{1});
     prb.Su = Sz{2}; prb.invSu = inv(Sz{2});

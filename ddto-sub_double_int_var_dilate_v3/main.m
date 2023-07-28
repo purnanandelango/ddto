@@ -1,7 +1,7 @@
 clearvars
 clc
 
-prb = problem_data_2D(17, ...           % K
+prb = problem_data_2D(14, ...           % K
                       20, ...           % scp_iters
                       20, ...           % wvc
                       0.01, ...         % wtr

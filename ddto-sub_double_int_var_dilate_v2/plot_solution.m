@@ -36,6 +36,8 @@ if isfield(prb,'robs')
         end
     end
 end
+xlim([-1,6]);
+ylim([-5,7]);
 
 ax = gca;
 ax.DataAspectRatio = [1,1,1];
@@ -52,7 +54,7 @@ for j = 1:prb.ntarg
     plot(tvecbar(prb.Kstr+1:end,j),nrm_vbar(prb.Kstr+1:end,j),'o','Color',cval{j});
 end
 xlim([0,max(tvecbar(end,:))]);
-title('Velocity')
+title('Speed')
 xlabel('$t$');
 
 subplot(2,2,3)
@@ -66,7 +68,7 @@ for j = 1:prb.ntarg
     plot(tvecbar(prb.Kstr:end,j),nrm_Tbar(prb.Kstr:end,j),'o','Color',cval{j});
 end
 xlim([0,max(tvecbar(end,:))]);
-title('Thrust');
+title('Thrust magnitude');
 xlabel('$t$');
 
 subplot(2,2,4)
