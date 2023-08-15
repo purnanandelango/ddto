@@ -133,6 +133,6 @@ function [cnstr,cost_fun,vb_cnstr] = sys_cnstr_cost(x,u,prb,...
     % vb_cnstr = sum(nu_ncvx(:));    
     vb_cnstr = 0;
 
-    cost_fun = prb.cost_factor*defer_time; % + prb.wvb*vb_cnstr;        
+    cost_fun = -prb.cost_factor*defer_time; % + prb.wvb*vb_cnstr;        
 
 end
