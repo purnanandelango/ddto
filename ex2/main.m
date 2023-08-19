@@ -2,14 +2,13 @@ clearvars
 clc
 
 prb = problem_data_2D(14, ...           % K
-                      10, ...           % scp_iters
-                      20, ...           % wvc
-                      10, ...           % wvb    
+                      05, ...           % scp_iters
+                      5e1, ...          % wvc
                       0.01, ...         % wtr
-                      0.1);             % cost_factor
+                      0.05);            % cost_factor
 
-% load('recent_solution','x','u','tau');
-[xbar,ubar] = misc.create_initialization(prb,1);%,x,u,tau);
+load('recent_solution','xbar','ubar');
+[xbar,ubar] = misc.create_initialization(prb,2,xbar,ubar,[]);
 
 [xbar,ubar] = scp.run_ptr_noparam(xbar,ubar,prb,@sys_cnstr_cost);
 

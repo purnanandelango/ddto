@@ -58,11 +58,11 @@ function prb = problem_data_2D(K,scp_iters,wvc,wtr,cost_factor)
     prb.ToFmax   = 50;
     prb.dTmax    = 4;
 
-    prb.betmin = 0.01*ones(prb.m,1);
-    prb.betmax = 0.1*[1;
-                  1;
-                  1;
-                  1];    
+    prb.betmin = 0.0*ones(prb.m,1);
+    prb.betmax = 0.01*[1;
+                       1;
+                       1;
+                       1];    
 
     prb.snom = [1, 10];
     prb.ToFguess = 15;
@@ -130,10 +130,10 @@ function prb = problem_data_2D(K,scp_iters,wvc,wtr,cost_factor)
     % SCP parameters
 
     prb.disc = "FOH";
-    prb.foh_type = "v3";
+    prb.foh_type = "v3_parallel";
     prb.scp_iters = scp_iters; % Maximum SCP iterations
 
-    prb.solver_settings = sdpsettings('solver','gurobi','verbose',0);
+    prb.solver_settings = sdpsettings('solver','gurobi','verbose',0,'gurobi.OptimalityTol',1e-9,'gurobi.FeasibilityTol',1e-9);
     
     prb.tr_norm = 2;
     
@@ -143,7 +143,6 @@ function prb = problem_data_2D(K,scp_iters,wvc,wtr,cost_factor)
     % prb.subopt_type = 'sum_quad_u';
     
     prb.wvc = wvc;
-    % prb.wvb = wvb; 
     prb.wtr = wtr;
     prb.cost_factor = cost_factor;
     

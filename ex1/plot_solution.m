@@ -36,8 +36,8 @@ if isfield(prb,'robs')
         end
     end
 end
-xlim([-1,6]);
-ylim([-5,7]);
+xlim([-5,6]);
+ylim([-3,8]);
 
 ax = gca;
 ax.DataAspectRatio = [1,1,1];

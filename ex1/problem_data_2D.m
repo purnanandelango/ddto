@@ -113,10 +113,10 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     % SCP parameters
 
     prb.disc = "FOH";
-    prb.foh_type = "v3";
+    prb.foh_type = "v3_parallel";
     prb.scp_iters = scp_iters; % Maximum SCP iterations
 
-    prb.solver_settings = sdpsettings('solver','gurobi','verbose',0);
+    prb.solver_settings = sdpsettings('solver','gurobi','verbose',0,'gurobi.OptimalityTol',1e-9,'gurobi.FeasibilityTol',1e-9);
     
     prb.tr_norm = 2;
     
@@ -138,7 +138,7 @@ function prb = problem_data_2D(K,scp_iters,wvc,wvb,wtr,cost_factor)
     prb.time_grid = @(tau,x,s) disc.time_grid(prb.disc,tau,s);    
     
     % Convenient functions for accessing RHS of nonlinear and linearized ODE
-    prb.dyn_func = @(t,x,u) evaluate_dyn_func(x,u,prb.ntarg,prb.n,prb.c_d,prb.g);
+    prb.dyn_func = @(t,x,u)                    evaluate_dyn_func(x,u,prb.ntarg,prb.n,prb.c_d,prb.g);
     prb.dyn_func_linearize = @(tbar,xbar,ubar) evaluate_linearization(xbar,ubar,prb.ntarg,prb.n,prb.c_d,prb.g);
 
 end

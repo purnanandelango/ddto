@@ -1,5 +1,5 @@
-function [cnstr,cost_fun,vb_cnstr] = sys_cnstr_cost(x,u,prb,...
-                                                    xbar,ubar)
+function [cnstr,cost_fun,vcvb_cnstr] = sys_cnstr_cost(x,u,prb,...
+                                                      xbar,ubar)
     K = prb.K;
     n = prb.n;
     ntarg = prb.ntarg;
@@ -120,8 +120,9 @@ function [cnstr,cost_fun,vb_cnstr] = sys_cnstr_cost(x,u,prb,...
     % Time available to defer decision
     defer_time = sum(dt(1:prb.Kstr,1));
 
-    vb_cnstr = sum(nu_ncvx(:));    
+    vcvb_cnstr = sum(nu_ncvx(:));    
 
-    cost_fun = prb.cost_factor*defer_time + prb.wvb*vb_cnstr;        
+    % Maximize deferrability
+    cost_fun = -prb.cost_factor*defer_time + prb.wvb*vcvb_cnstr;        
 
 end

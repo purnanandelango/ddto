@@ -1,5 +1,5 @@
-function [cnstr,cost_fun,vb_cnstr] = sys_cnstr_cost(x,u,prb,...
-                                                    xbar,ubar)
+function [cnstr,cost_fun,vcvb_cnstr] = sys_cnstr_cost(x,u,prb,...
+                                                      xbar,ubar)
     K = prb.K;
     n = prb.n;
     m = prb.m;
@@ -11,9 +11,6 @@ function [cnstr,cost_fun,vb_cnstr] = sys_cnstr_cost(x,u,prb,...
     bet = sdpvar(m,K,ntarg);
     T   = sdpvar(n,K,ntarg);
     s   = sdpvar(K,ntarg);
-
-    % Obstacle avoidance buffer
-    % nu_ncvx = sdpvar(prb.nobs+1,ntarg,K);    
 
     rbar = zeros(n,K,ntarg);
     vbar = zeros(n,K,ntarg);
@@ -27,8 +24,8 @@ function [cnstr,cost_fun,vb_cnstr] = sys_cnstr_cost(x,u,prb,...
             v(:,k,j)   = prb.Sx(prb.idx_v(:,j),prb.idx_v(:,j))     *x(prb.idx_v(:,j),k)    + prb.cx(prb.idx_v(:,j));
             bet(:,k,j) = prb.Sx(prb.idx_bet(:,j),prb.idx_bet(:,j)) *x(prb.idx_bet(:,j),k)  + prb.cx(prb.idx_bet(:,j));
     
-            T(:,k,j)   = prb.Su(prb.idx_T(:,j),prb.idx_T(:,j)) *u(prb.idx_T(:,j),k)  + prb.cu(prb.idx_T(:,j));        
-            s(k,j)     = prb.Su(prb.idx_s(j),prb.idx_s(j))     *u(prb.idx_s(j),k)    + prb.cu(prb.idx_s(j));
+            T(:,k,j)   = prb.Su(prb.idx_T(:,j),prb.idx_T(:,j))     *u(prb.idx_T(:,j),k)    + prb.cu(prb.idx_T(:,j));        
+            s(k,j)     = prb.Su(prb.idx_s(j),prb.idx_s(j))         *u(prb.idx_s(j),k)      + prb.cu(prb.idx_s(j));
 
             rbar(:,k,j) = xbar(prb.idx_r(:,j),k);
             vbar(:,k,j) = xbar(prb.idx_v(:,j),k);  
@@ -52,11 +49,10 @@ function [cnstr,cost_fun,vb_cnstr] = sys_cnstr_cost(x,u,prb,...
         % Constraints
         for k = 1:K   
             
+            % Convex constraints on control
             cnstr = [cnstr;
-                     norm(T(:,k,j)) <= prb.umax;                                                                    % Thrust magnitude upper bound
-                     % norm(v(:,k,j)) <= prb.vmax;                                                                    % Velocity magnitude upper bound
-                     % -prb.rmax <= r(:,k,j) <= prb.rmax;                                                             % Bounds on position 
-                     prb.smin <= s(k,j) <= prb.smax];                                                               % Lower and upper bounds on dilation factor
+                     norm(T(:,k,j)) <= prb.umax;        % Thrust upper bound
+                     prb.smin <= s(k,j) <= prb.smax];   % Lower and upper bounds on dilation factor
 
             % Deferrability
             if j > 1 && k <= prb.Kstr
@@ -66,22 +62,11 @@ function [cnstr,cost_fun,vb_cnstr] = sys_cnstr_cost(x,u,prb,...
                          T(:,k,1) == T(:,k,j)];
             end
 
+            % Integrated constraint violation
             if k < K
                 cnstr = [cnstr;
                          bet(:,k+1,j) == bet(:,k,j)];
             end
-
-
-            % for i = 1:prb.nobs
-            %     cnstr = [cnstr;
-            %              norm(rbar(:,k,j)-prb.robs(:,i)) - prb.aobs(i) + dot(rbar(:,k,j)-prb.robs(:,i),r(:,k,j)-rbar(:,k,j))/norm(rbar(:,k,j)-prb.robs(:,i)) + nu_ncvx(i,j,k) >= 0;
-            %              nu_ncvx(i,j,k) >= 0];
-            % end  
-            % 
-            % % Thrust lower bound
-            % cnstr = [cnstr;
-            %          norm(Tbar(:,k,j)) - prb.umin + dot(Tbar(:,k,j),T(:,k,j)-Tbar(:,k,j))/norm(Tbar(:,k,j)) + nu_ncvx(end,j,k) >= 0;
-            %          nu_ncvx(end,j,k) >= 0];
         
         end
     
@@ -130,9 +115,9 @@ function [cnstr,cost_fun,vb_cnstr] = sys_cnstr_cost(x,u,prb,...
     % Time available to defer decision
     defer_time = sum(dt(1:prb.Kstr,1));
 
-    % vb_cnstr = sum(nu_ncvx(:));    
-    vb_cnstr = 0;
+    vcvb_cnstr = 0;
 
-    cost_fun = -prb.cost_factor*defer_time; % + prb.wvb*vb_cnstr;        
+    % Maximize deferrability
+    cost_fun = -prb.cost_factor*defer_time;        
 
 end
