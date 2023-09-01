@@ -8,14 +8,14 @@ function prb = problem_data_2D(K,scp_iters,wvc,wtr,cost_factor)
 
     prb.m = 4;
 
-    prb.nx = (2*prb.n+prb.m)*prb.ntarg;
-    prb.nu = (prb.n+1)*prb.ntarg;
+    prb.nx = (2*prb.n+prb.m)*(prb.ntarg+1);
+    prb.nu = (prb.n+1)*(prb.ntarg+1);
     prb.np = 0;    
 
     % Convenient indices for state and input associated with trajectories to different targets
-    [prb.idx_x,prb.idx_u,prb.idx_s,prb.idx_bet] = util.disassemble_traj_idx(2*prb.n,prb.n,prb.m,prb.ntarg);
+    [prb.idx_x,prb.idx_u,prb.idx_s,prb.idx_bet] = util.disassemble_traj_idx(2*prb.n,prb.n,prb.m,prb.ntarg+1);
     prb.idx_r = prb.idx_x(1:prb.n,:);
-    prb.idx_v = prb.idx_x(prb.n+1:2*prb.n,:);
+    prb.idx_v = prb.idx_x(prb.n+1:2*prb.n,:); 
 
     prb.tau = grid.generate_grid(0,1,K,'uniform');  % Generate grid in [0,1]
 
@@ -23,11 +23,6 @@ function prb = problem_data_2D(K,scp_iters,wvc,wtr,cost_factor)
     
     prb.h = (1/10)*min(prb.dtau);                    % Step size for integration that computes FOH matrices
     prb.Kfine = 1+10*round(1/min(prb.dtau));         % Size of grid on which SCP solution is simulated
-
-    % Deferrability index
-    prb.Kstr = round(K/2);
-    prb.taustr = prb.tau(prb.Kstr);
-    [~,prb.Kstrfine] = min(abs(prb.taustr-grid.generate_grid(0,1,prb.Kfine,'uniform')));
 
     % System parameters
 
@@ -80,36 +75,39 @@ function prb = problem_data_2D(K,scp_iters,wvc,wtr,cost_factor)
 
     prb.betK = zeros(prb.m,1);    
 
+    prb.rmid = sum(prb.rK + repmat(prb.r1,[1,prb.ntarg]),2)/(2*prb.ntarg);
+    prb.vmid = sum(prb.vK + repmat(prb.v1,[1,prb.ntarg]),2)/(2*prb.ntarg);
+
     assert(size(prb.rK,2) == prb.ntarg && size(prb.vK,2) == prb.ntarg,"Incorrect no. of targets states specified.");
 
-    prb.x1 = reshape([prb.r1,   prb.r1,   prb.r1,   prb.r1;
-                      prb.v1,   prb.v1,   prb.v1,   prb.v1;
-                      prb.bet1, prb.bet1, prb.bet1, prb.bet1],[prb.nx,1]);
-    prb.xK = reshape([prb.rK;
-                      prb.vK; ...
-                      prb.betK, prb.betK, prb.betK, prb.betK],[prb.nx,1]);
-    prb.u1 = reshape([0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1);
-                      prb.ToFguess,               prb.ToFguess,               prb.ToFguess,               prb.ToFguess],[prb.nu,1]);
-    prb.uK = reshape([0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1);
-                      prb.ToFguess,               prb.ToFguess,               prb.ToFguess,               prb.ToFguess],[prb.nu,1]);    
+    prb.x1 = reshape([prb.r1,   prb.rmid, prb.rmid, prb.rmid, prb.rmid;
+                      prb.v1,   prb.vmid, prb.vmid, prb.vmid, prb.vmid;
+                      prb.bet1, prb.bet1, prb.bet1, prb.bet1, prb.bet1],[prb.nx,1]);
+    prb.xK = reshape([prb.rmid, prb.rK;
+                      prb.vmid, prb.vK; ...
+                      prb.betK, prb.betK, prb.betK, prb.betK, prb.betK],[prb.nx,1]);
+    prb.u1 = reshape([0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1);
+                      prb.ToFguess,               prb.ToFguess,               prb.ToFguess,               prb.ToFguess,               prb.ToFguess],[prb.nu,1]);
+    prb.uK = reshape([0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1), 0.5*prb.umax*ones(prb.n,1);
+                      prb.ToFguess,               prb.ToFguess,               prb.ToFguess,               prb.ToFguess,               prb.ToFguess],[prb.nu,1]);    
 
     % Scaling parameters
 
-    % xmin = repmat([-0.5*prb.rmax*ones(prb.n,1); -0.5*prb.vmax*ones(prb.n,1); prb.betmin],[prb.ntarg,1]);
-    % xmax = repmat([ 0.5*prb.rmax*ones(prb.n,1);  0.5*prb.vmax*ones(prb.n,1); prb.betmax],[prb.ntarg,1]);
-    xmin = reshape([-0.5*prb.rmax*ones(prb.n,1),  -0.5*prb.rmax*ones(prb.n,1),  -0.5*prb.rmax*ones(prb.n,1),  -0.5*prb.rmax*ones(prb.n,1);
-                    -0.5*prb.vmax*ones(prb.n,1),  -0.5*prb.vmax*ones(prb.n,1),  -0.5*prb.vmax*ones(prb.n,1),  -0.5*prb.vmax*ones(prb.n,1);
-                     prb.betmin,                   prb.betmin,                   prb.betmin,                   prb.betmin],[prb.nx,1]);
-    xmax = reshape([ 0.5*prb.rmax*ones(prb.n,1),   0.5*prb.rmax*ones(prb.n,1),   0.5*prb.rmax*ones(prb.n,1),   0.5*prb.rmax*ones(prb.n,1);
-                     0.5*prb.vmax*ones(prb.n,1),   0.5*prb.vmax*ones(prb.n,1),   0.5*prb.vmax*ones(prb.n,1),   0.5*prb.vmax*ones(prb.n,1);
-                     prb.betmax,                   prb.betmax,                   prb.betmax,                   prb.betmax],[prb.nx,1]);    
+    % xmin = repmat([-0.5*prb.rmax*ones(prb.n,1); -0.5*prb.vmax*ones(prb.n,1); prb.betmin],[prb.ntarg+1,1]);
+    % xmax = repmat([ 0.5*prb.rmax*ones(prb.n,1);  0.5*prb.vmax*ones(prb.n,1); prb.betmax],[prb.ntarg+1,1]);
+    xmin = reshape([-0.5*prb.rmax*ones(prb.n,1),  -0.5*prb.rmax*ones(prb.n,1),  -0.5*prb.rmax*ones(prb.n,1),  -0.5*prb.rmax*ones(prb.n,1),  -0.5*prb.rmax*ones(prb.n,1);
+                    -0.5*prb.vmax*ones(prb.n,1),  -0.5*prb.vmax*ones(prb.n,1),  -0.5*prb.vmax*ones(prb.n,1),  -0.5*prb.vmax*ones(prb.n,1),  -0.5*prb.vmax*ones(prb.n,1);
+                     prb.betmin,                   prb.betmin,                   prb.betmin,                   prb.betmin,                   prb.betmin],[prb.nx,1]);
+    xmax = reshape([ 0.5*prb.rmax*ones(prb.n,1),   0.5*prb.rmax*ones(prb.n,1),   0.5*prb.rmax*ones(prb.n,1),   0.5*prb.rmax*ones(prb.n,1),   0.5*prb.rmax*ones(prb.n,1);
+                     0.5*prb.vmax*ones(prb.n,1),   0.5*prb.vmax*ones(prb.n,1),   0.5*prb.vmax*ones(prb.n,1),   0.5*prb.vmax*ones(prb.n,1),   0.5*prb.vmax*ones(prb.n,1);
+                     prb.betmax,                   prb.betmax,                   prb.betmax,                   prb.betmax,                   prb.betmax],[prb.nx,1]);    
     
-    % umin = repmat([prb.umin*ones(prb.n,1); prb.snom(1)],[prb.ntarg,1]);
-    % umax = repmat([prb.umax*ones(prb.n,1); prb.snom(2)],[prb.ntarg,1]);
-    umin = reshape([prb.umin*ones(prb.n,1), prb.umin*ones(prb.n,1), prb.umin*ones(prb.n,1), prb.umin*ones(prb.n,1);
-                    prb.snom(1),            prb.snom(1),            prb.snom(1),            prb.snom(1)],[prb.nu,1]);
-    umax = reshape([prb.umax*ones(prb.n,1), prb.umax*ones(prb.n,1), prb.umax*ones(prb.n,1), prb.umax*ones(prb.n,1);
-                    prb.snom(2),            prb.snom(2),            prb.snom(2),            prb.snom(2)],[prb.nu,1]);
+    % umin = repmat([prb.umin*ones(prb.n,1); prb.snom(1)],[prb.ntarg+1,1]);
+    % umax = repmat([prb.umax*ones(prb.n,1); prb.snom(2)],[prb.ntarg+1,1]);
+    umin = reshape([prb.umin*ones(prb.n,1), prb.umin*ones(prb.n,1), prb.umin*ones(prb.n,1), prb.umin*ones(prb.n,1), prb.umin*ones(prb.n,1);
+                    prb.snom(1),            prb.snom(1),            prb.snom(1),            prb.snom(1),            prb.snom(1)],[prb.nu,1]);
+    umax = reshape([prb.umax*ones(prb.n,1), prb.umax*ones(prb.n,1), prb.umax*ones(prb.n,1), prb.umax*ones(prb.n,1), prb.umax*ones(prb.n,1);
+                    prb.snom(2),            prb.snom(2),            prb.snom(2),            prb.snom(2),            prb.snom(2)],[prb.nu,1]);
 
     [Sz,cz] = misc.generate_scaling({[xmin,xmax],[umin,umax]},[0,1]);
 
@@ -129,7 +127,7 @@ function prb = problem_data_2D(K,scp_iters,wvc,wtr,cost_factor)
     prb.tr_norm = 2;
     
     prb.cost_term = @(x,u) norm(u);
-        
+    
     prb.wvc = wvc;
     prb.wtr = wtr;
     prb.cost_factor = cost_factor;
@@ -138,12 +136,12 @@ function prb = problem_data_2D(K,scp_iters,wvc,wtr,cost_factor)
     prb.epstr = 1e-7;
 
     % Takes in unscaled data
-    prb.time_of_maneuver = @(z,nu) disc.time_of_maneuver(prb.disc,prb.tau(1:prb.Kstr),nu(prb.n+1,1:prb.Kstr)); % Returns the time available to defer decision
+    prb.time_of_maneuver = @(z,nu) disc.time_of_maneuver(prb.disc,prb.tau,nu(prb.n+1,:)); % Returns the time available to defer decision
     prb.time_grid = @(tau,z,s) disc.time_grid(prb.disc,tau,s);    
     
     % Convenient functions for accessing RHS of nonlinear and linearized ODE
-    prb.dyn_func = @(t,z,nu)                    evaluate_dyn_func(z,nu,           prb.ntarg,prb.n,prb.m,prb.c_d,prb.g,prb.robs,prb.aobs,prb.vmax,prb.umin);
-    prb.dyn_func_linearize = @(tbar,zbar,nubar) evaluate_linearization(zbar,nubar,prb.ntarg,prb.n,prb.m,prb.c_d,prb.g,prb.robs,prb.aobs,prb.vmax,prb.umin);
+    prb.dyn_func = @(t,z,nu)                    evaluate_dyn_func(z,nu,           prb.ntarg+1,prb.n,prb.m,prb.c_d,prb.g,prb.robs,prb.aobs,prb.vmax,prb.umin);
+    prb.dyn_func_linearize = @(tbar,zbar,nubar) evaluate_linearization(zbar,nubar,prb.ntarg+1,prb.n,prb.m,prb.c_d,prb.g,prb.robs,prb.aobs,prb.vmax,prb.umin);
 
 end
 

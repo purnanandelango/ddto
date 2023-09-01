@@ -1,66 +1,29 @@
-function [r,   v,   T,   s,   tvec,   nrm_v,   nrm_T,...
-          rbar,vbar,Tbar,sbar,tvecbar,nrm_vbar,nrm_Tbar,...
-          traj_cost,traj_cost_str]                              = disassemble(x,u,tau,xbar,ubar,prb)
+function [x,u,s,t,cum_traj_cost] = disassemble(tau,z,nu,n_cnstr,n_targ, ...
+                                               time_grid_func,stage_cost_func)
+% z  : vector containing states and constraint violation for all trajectories arranged as column vectors
+% nu : vector containing control and dilation for all trajectories arranged as column vectors
 
-    r     = zeros(prb.n,prb.Kfine,prb.ntarg);
-    v     = zeros(prb.n,prb.Kfine,prb.ntarg);
-    T     = zeros(prb.n,prb.Kfine,prb.ntarg);
-    nrm_v = zeros(prb.Kfine,prb.ntarg);
-    nrm_T = zeros(prb.Kfine,prb.ntarg);
-    s     = zeros(prb.Kfine,prb.ntarg);
-    tvec  = zeros(prb.Kfine,prb.ntarg);
-    
-    rbar     = zeros(prb.n,prb.K,prb.ntarg);
-    vbar     = zeros(prb.n,prb.K,prb.ntarg);
-    Tbar     = zeros(prb.n,prb.K,prb.ntarg);
-    nrm_vbar = zeros(prb.K,prb.ntarg);
-    nrm_Tbar = zeros(prb.K,prb.ntarg);
-    sbar     = zeros(prb.K,prb.ntarg);
-    tvecbar  = zeros(prb.K,prb.ntarg);
-    traj_cost = zeros(1,prb.ntarg);
-    traj_cost_str = 0;
-    
-    for j = 1:prb.ntarg
-        for k = 1:prb.Kfine
-            r(:,k,j)   = x(prb.idx_r(:,j),k);
-            v(:,k,j)   = x(prb.idx_v(:,j),k);
-            T(:,k,j)   = u(prb.idx_T(:,j),k);
-            nrm_v(k,j) = norm(v(:,k,j));        
-            nrm_T(k,j) = norm(T(:,k,j));
-            s(k,j)     = u(prb.idx_s(j),k);
-        end
-        tvec(:,j) = prb.time_grid(tau,x,s(:,j));
-    
-        for k = 1:prb.K
-            rbar(:,k,j)   = xbar(prb.idx_r(:,j),k);
-            vbar(:,k,j)   = xbar(prb.idx_v(:,j),k);
-            Tbar(:,k,j)   = ubar(prb.idx_T(:,j),k);
-            nrm_vbar(k,j) = norm(vbar(:,k,j));        
-            nrm_Tbar(k,j) = norm(Tbar(:,k,j));
-            sbar(k,j)     = ubar(prb.idx_s(j),k);
-        end
-        tvecbar(:,j) = prb.time_grid(prb.tau,xbar,sbar(:,j));
-    
-        % Trajectory cost    
-        switch prb.subopt_type
-            case 'sum_stage_cost'
-                for k = 1:prb.K
-                    traj_cost(j) = traj_cost(j) + prb.cost_term(Tbar(:,k,j));
-                    if k == prb.Kstr-1 && traj_cost_str == 0
-                        traj_cost_str = traj_cost(j);
-                    end
-                end
-            case 'sum_quad_u'
-                Tj = Tbar(:,:,j);                                              
-                traj_cost(j) = norm(Tj(:));
-                if traj_cost_str == 0
-                    Tj = Tbar(:,1:prb.Kstr-1,j);
-                    traj_cost_str = norm(Tj(:));
-                end
-        end   
+    N               = size(z,2);
+    n_states        = size(z,1)/n_targ - n_cnstr;
+    n_ctrl          = size(nu,1)/n_targ - 1; 
 
-    fprintf('\nTarget %d - Final position error: %.3f\n         - Final velocity error: %.3f\n         -      Trajectory cost: %.3f\n',j,norm(r(:,end,j)-prb.rK(:,j)),norm(v(:,end,j)-prb.vK(:,j)),traj_cost(j));        
-    
+    x               = zeros(n_states,N,n_targ);     % State
+    u               = zeros(n_ctrl,N,n_targ);       % Control input
+    s               = zeros(N,n_targ);              % Dilation factor
+    t               = zeros(N,n_targ);              % Time grid
+    cum_traj_cost   = zeros(N,n_targ);              % Cumulative trajectory cost
+
+    [idx_x,idx_u,idx_s] = util.disassemble_traj_idx(n_states,n_ctrl,n_cnstr,n_targ);
+    for j = 1:n_targ
+        for k = 1:N
+            x(:,k,j) = z(idx_x(:,j),k);
+            u(:,k,j) = nu(idx_u(:,j),k);
+            s(k,j) = nu(idx_s(j),k);
+            if k < N
+                cum_traj_cost(k+1,j) = cum_traj_cost(k,j) + stage_cost_func(x(:,k,j),u(:,k,j));    
+            end
+        end
+        t(:,j) = time_grid_func(tau,x(:,:,j),s(:,j));
     end
 
 end

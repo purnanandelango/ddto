@@ -46,12 +46,12 @@ ax.PlotBoxAspectRatio = [1,1,1];
 
 subplot(2,2,2)
 for j = 1:prb.ntarg
-    plot(tvec(1:prb.Kstrfine,j),nrm_v(1:prb.Kstrfine,j),'-k')
+    plot(tvec(1:prb.Kstrfine,j),nrmv(1:prb.Kstrfine,j),'-k')
     hold on
-    plot(tvecbar(1:prb.Kstr,j),nrm_vbar(1:prb.Kstr,j),'ok');    
+    plot(tvecbar(1:prb.Kstr,j),nrmvbar(1:prb.Kstr,j),'ok');    
     plot(tvecbar,prb.vmax*ones(1,prb.K),'-r','LineWidth',2);
-    plot(tvec(prb.Kstrfine:end,j),nrm_v(prb.Kstrfine:end,j),'-','Color',cval{j});
-    plot(tvecbar(prb.Kstr+1:end,j),nrm_vbar(prb.Kstr+1:end,j),'o','Color',cval{j});
+    plot(tvec(prb.Kstrfine:end,j),nrmv(prb.Kstrfine:end,j),'-','Color',cval{j});
+    plot(tvecbar(prb.Kstr+1:end,j),nrmvbar(prb.Kstr+1:end,j),'o','Color',cval{j});
 end
 xlim([0,max(tvecbar(end,:))]);
 title('Speed')
@@ -59,13 +59,13 @@ xlabel('$t$');
 
 subplot(2,2,3)
 for j = 1:prb.ntarg
-    plot(tvec(1:prb.Kstrfine,j),nrm_T(1:prb.Kstrfine,j),'-k');
+    plot(tvec(1:prb.Kstrfine,j),nrmu(1:prb.Kstrfine,j),'-k');
     hold on
     plot(tvecbar,prb.umax*ones(1,prb.K),'-r','LineWidth',2);
     plot(tvecbar,prb.umin*ones(1,prb.K),'-r','LineWidth',2);    
-    plot(tvecbar(1:prb.Kstr,j),nrm_Tbar(1:prb.Kstr,j),'ok');    
-    plot(tvec(prb.Kstrfine:end,j),nrm_T(prb.Kstrfine:end,j),'-','Color',cval{j});
-    plot(tvecbar(prb.Kstr:end,j),nrm_Tbar(prb.Kstr:end,j),'o','Color',cval{j});
+    plot(tvecbar(1:prb.Kstr,j),nrmubar(1:prb.Kstr,j),'ok');    
+    plot(tvec(prb.Kstrfine:end,j),nrmu(prb.Kstrfine:end,j),'-','Color',cval{j});
+    plot(tvecbar(prb.Kstr:end,j),nrmubar(prb.Kstr:end,j),'o','Color',cval{j});
 end
 xlim([0,max(tvecbar(end,:))]);
 title('Thrust magnitude');
