@@ -1,15 +1,9 @@
-# Deferred Decision Trajectory Optimization via Sequential Convex Programming
+# Deferred Decision Trajectory Optimization
 
-## `ex1`
- - double integrator with (nonlinear) drag
- - ddto subproblem
- - constraints only at node points
- - trajectory to each of targets independently parameterized
- - identical portion of the trajectories specified by index `Kstr` of normalized time `tau` 
+## `ddto-qcvx`
+ - discrete-time 2D double integrator
+ - convex path constraints: speed upper bound, thrust upper bound
 
-## `ex2`
- - double integrator with (nonlinear) drag
- - ddto subproblem
- - continuous-time satisfaction of constraints (except for identicality)
- - trajectory to each of targets independently parameterized
- - identical portion of the trajectories specified by index `Kstr` of normalized time `tau`
+## `ddto-scp`
+ - continuous-time 3D quadrotor with drag
+ - nonconvex path constraints: obstacle avoidance, speed upper bound, thrust upper and lower bound
