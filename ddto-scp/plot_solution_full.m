@@ -10,15 +10,15 @@ prb = sol1.prb;
 
 ntarg_p_1 = prb.ntarg+1;
 
-f1 = figure('Position',[100,101,700,700]);
-
-interpreter = "tex";
-% interpreter = "latex";
+interpreter = "tex";        plt.setfig("tex");
+% interpreter = "latex";      plt.setfig("latex")
 saveplot = true;
 
 Colors_branch = {[1,0.5,0.5],[0,0.7,0.3],[0.5,0.5,1],[1,0.65,0.3]};
 Colors_trunk = {[0.1,0.1,0.2],[0.3,0.3,0.4],[0.5,0.5,0.6]};
 Color_bound = [161,240,242]/255;
+
+f1 = figure('Position',[100,100,700,700]);
 
 % Plot trunk and branch position trace
 plot3(sol1.r(1,:,1),     sol1.r(2,:,1),     sol1.r(3,:,1),     '-','Color',Colors_trunk{1});
@@ -109,7 +109,6 @@ elseif interpreter == "tex"
 end
 
 if saveplot
-    ax = gca;
     exportgraphics(ax,"results/position_"+interpreter+".pdf",'ContentType','vector');
     savefig(f1,'results/position.fig');
 end
@@ -118,6 +117,7 @@ ToFmax = max(sol1.ToFtrunk+sol2.ToFtrunk+sol3.ToFtrunk+sol3.tvecbar(end,2:end));
 
 f2 = figure('Position',[1500,101,1400,700],'Units','normalized');
 
+% Thrust pointing angle
 subplot(3,2,1)
 plot(linspace(0,ToFmax,100),prb.deltamax*ones(1,100),'-','Color',Color_bound,'LineWidth',4);
 hold on 
