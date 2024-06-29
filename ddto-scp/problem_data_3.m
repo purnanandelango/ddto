@@ -1,11 +1,11 @@
-function prb = problem_data(K,scp_iters,w_ep,w_px,cost_factor,...
+function prb = problem_data_3(K,scp_iters,w_ep,w_px,cost_factor,...
                             zinit,rvtarg,cost_bound)
     
     prb.K = K;
 
     % Dimension of system
 
-    prb.ntarg = 4; ntarg = prb.ntarg; % No. of targets
+    prb.ntarg = size(rvtarg,2); ntarg = prb.ntarg; % No. of targets
 
     % prb.m = 7; % No. of path constraints
 
@@ -29,7 +29,7 @@ function prb = problem_data(K,scp_iters,w_ep,w_px,cost_factor,...
     % Bounds
 
     prb.rmax        = 40;
-    prb.vmax        = 12;
+    prb.vmax        = 08;
     prb.pmin        = 0;
     prb.pmax        = 1000;
 
@@ -38,7 +38,7 @@ function prb = problem_data(K,scp_iters,w_ep,w_px,cost_factor,...
     prb.ymin        = 0;
     prb.ymax        = 1;
 
-    prb.Tmin        = 1.0;
+    prb.Tmin        = 5.0;
     prb.Tmax        = 20.0;    
 
     prb.ehat        = [0;0;1];
@@ -46,7 +46,7 @@ function prb = problem_data(K,scp_iters,w_ep,w_px,cost_factor,...
 
     prb.smin        = 1;
     prb.smax        = 15;
-    prb.ToFguess    = 20;
+    prb.ToFguess    = 10;
 
     % Obstacle avoidance
 
@@ -54,13 +54,16 @@ function prb = problem_data(K,scp_iters,w_ep,w_px,cost_factor,...
 
     % Centers
     prb.qobs        = [-5 -10;                  
-                        6  20;
+                        1  20;
                        10  10];
 
     % Shape matrices
-    prb.Hobs        = {blkdiag(diag([0.3,0.1])*geom.rot_mat_2D(0),0.3), ...
-                       blkdiag(diag([0.1,0.3])*geom.rot_mat_2D(0),0.3)};  
+    prb.robs        = {[0.2,0.1,0.2],[0.1,0.2,0.2]};
 
+    prb.Hobs        = {blkdiag(diag(prb.robs{1}(1:2))*geom.rot_mat_2D(0),prb.robs{1}(3)), ...
+                       blkdiag(diag(prb.robs{2}(1:2))*geom.rot_mat_2D(0),prb.robs{1}(3))}; 
+
+ 
     % Boundary conditions
 
     prb.r1 = zinit(1:n);
@@ -73,7 +76,8 @@ function prb = problem_data(K,scp_iters,w_ep,w_px,cost_factor,...
 
     prb.rmid = sum(prb.rK + repmat(prb.r1,[1,ntarg]),2)/(2*ntarg);
     prb.vmid = sum(prb.vK + repmat(prb.v1,[1,ntarg]),2)/(2*ntarg);
-    prb.Tmid = 0.5*(prb.Tmax+prb.Tmin)*ones(n,1);
+    % prb.Tmid = 0.5*(prb.Tmax+prb.Tmin)*ones(n,1);
+    prb.Tmid = prb.Tmin*ones(n,1);
 
     % Initialization generator
 
@@ -84,7 +88,7 @@ function prb = problem_data(K,scp_iters,w_ep,w_px,cost_factor,...
 
     prb.xK = reshape([[prb.rmid, prb.rK;
                        prb.vmid, prb.vK];
-                      repmat([prb.p1;prb.y1],[1,ntarg+1])],[prb.nx,1]);    
+                      repmat([prb.pmax;prb.y1],[1,ntarg+1])],[prb.nx,1]);    
 
     prb.u1 = reshape(repmat([prb.Tmid;
                              prb.ToFguess],[1,ntarg+1]),[prb.nu,1]);
@@ -113,7 +117,7 @@ function prb = problem_data(K,scp_iters,w_ep,w_px,cost_factor,...
     prb.cx = cz{1};
     prb.cu = cz{2};
 
-    prb.eps_cnstr = 1e-4;
+    prb.eps_cnstr = 1e-5;
 
     cnstr_scl = diag([...
                       1;
