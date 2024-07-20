@@ -2,7 +2,7 @@
 
 ## Quadrotor motion planning examples
 
-### `ddto-mip`
+### `ddto-micp`
  - discrete-time linear system (3D double integrator)
  - convex path constraints: thrust pointing, thrust upper bound and lower bound (convexified)
 
