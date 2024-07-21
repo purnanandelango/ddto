@@ -18,25 +18,27 @@ function sol = solve_ddto_micp_relax_v1(prb,weights)
 
     cnstr = [];
     
+    cum_cost_var = sdpvar(1,n);
     for j = 1:n
         cum_cost = 0;
         for k = 1:N(j)-1
-            % Dynamics constraint, state & input constraints
+            % Dynamics constraint and path constraints
             cnstr = [cnstr;
                      X{j}(:,k+1) == prb.A*X{j}(:,k) + prb.B*U{j}(:,k) + prb.c;
-                     norm(U{j}(:,k)) <= prb.umax;
-                     U{j}(3,k) >= prb.umin;
-                     norm(U{j}(1:2,k)) <= prb.tan_thet_tp*U{j}(3,k);
+                     prb.path_constraints(X{j}(:,k),U{j}(:,k));
                      ];
+            % Cumulative trajectory cost constraint
             cum_cost = cum_cost + prb.stage_cost(X{j}(:,k),U{j}(:,k));
         end
+        cum_cost_var(j) = cum_cost;        
         cnstr = [cnstr;
-                 cum_cost <= prb.lmax;
+                 cum_cost_var(j) <= prb.lmax;
                  X{j}(:,1) == prb.z0;
                  X{j}(:,N(j)) == prb.zf(:,j);                 
                  ];
     end
 
+    % objfun = 0.01*sum(cum_cost_var);
     objfun = 0;
 
     if isempty(weights)
@@ -57,7 +59,12 @@ function sol = solve_ddto_micp_relax_v1(prb,weights)
                      norm(X{j}(:,k) - X{i}(:,k)) <= Xi{j}(k)*prb.M;
                      0 <= Xi{j}(k) <= 1;
                      ];
-            objfun = objfun + Xi{j}(k) * weights{j}(k);
+            if weights{j}(k) < 1e-5
+                weight = 1;
+            else 
+                weight = weights{j}(k);
+            end
+            objfun = objfun + Xi{j}(k) * weight;
         end
     end
 
@@ -74,5 +81,10 @@ function sol = solve_ddto_micp_relax_v1(prb,weights)
             sol.Xi{j} = value(Xi{j});        
         end
     end
+    % sol.objval = value(objfun);
+    sol.objval = compute_ddto_cost(sol.X,i);
+    sol.cum_cost = value(cum_cost_var); 
+    sol.parsetime = yalmip_out.yalmiptime;
+    sol.solvetime = yalmip_out.solvertime;    
 
 end
