@@ -85,7 +85,7 @@ soldd3 = qcvx_bisection_dd(prob_par3,optcost);
 
 %% Plotting
 
-plot_condensed(prob_par,soldd,prob_par2,soldd2,prob_par3,soldd3,target_order);
+% plot_condensed(prob_par,soldd,prob_par2,soldd2,prob_par3,soldd3,target_order);
 % plot_condensed_l1(soll1,{'.-','l1',[0.4,0,0.9]})
 % plot_condensed_l1(solre_l1,{'.-','re-weight l1',[0.9,0.4,0.0]})
 

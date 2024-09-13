@@ -60,12 +60,16 @@ function sol = solve_ddto_micp(prb)
     sol = struct;
     sol.X   = cell(1,n);
     sol.U   = cell(1,n);    
-    sol.Xi  = cell(1,n);    
+    sol.Xi  = cell(1,n);
+    sol.idx = cell(1,n);
+    sol.idxmax = 0;
     for j=1:n
         sol.X{j} = value(X{j});
         sol.U{j} = value(U{j});
         if j ~= i
-            sol.Xi{j} = value(Xi{j});        
+            sol.Xi{j} = value(Xi{j});
+            [~,sol.idx{j}] = max(diff(sol.Xi{j}));
+            sol.idxmax = max(sol.idxmax,sol.idx{j});
         end
     end
     % sol.objval = value(objfun);

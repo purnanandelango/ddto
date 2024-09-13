@@ -66,6 +66,9 @@ function sol = solve_ddto_micp_relax_v1(prb,weights)
             end
             objfun = objfun + Xi{j}(k) * weight;
         end
+        cnstr = [cnstr; 
+                 Xi{j}(Ni(j)) == 1;
+                 ];                
     end
 
     yalmip_out = optimize(cnstr,objfun,prb.solversettings);

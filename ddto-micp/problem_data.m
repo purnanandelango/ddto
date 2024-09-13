@@ -32,7 +32,7 @@ for j = setdiff(1:prb.n,prb.i)
     prb.Ni(j) = min(prb.N(j),prb.N(prb.i));
 end
 
-prb.lmax = 4000;                                                                                                % Cumulative trajectory cost upper bound    
+prb.lmax = 3800; %2150                                                                                                % Cumulative trajectory cost upper bound    
 
 prb.umin = 8;                                                                                                   % Lower bound on control input z-axis component
 prb.umax = 20;                                                                                                  % Upper bound on control input magnitude
@@ -61,10 +61,14 @@ prb.c  = [ 0;
      
 prb.stage_cost = @(x,u) u'*u;                                                                                   % Stage cost for defining cumulative trajectory cost
 
-% prb.solversettings = sdpsettings('solver','gurobi','verbose',1,'gurobi.OptimalityTol',1e-9,'gurobi.FeasibilityTol',1e-9);
+% prb.solversettings = sdpsettings('solver','gurobi','verbose',0,'gurobi.OptimalityTol',1e-9,'gurobi.FeasibilityTol',1e-9);
 prb.solversettings = sdpsettings('solver','mosek','verbose',0,'mosek.MSK_DPAR_INTPNT_CO_TOL_PFEAS',1e-9,'mosek.MSK_DPAR_INTPNT_CO_TOL_REL_GAP',1e-9);
 
-prb.colors = {[1,0.8,0.5],[0.8,1,0.5],[0.5,1,0.8],[0.5,0.5,1]};
+% prb.colors = {[1,0.8,0.5],[0.8,1,0.5],[0.5,1,0.8],[0.5,0.5,1]};
+% prb.colors = {'magenta','red','blue','green'};
+prb.colors = {[0,0.7,0.3],[1,0.65,0.3],[0.5,0.5,1],[1,0.5,0.5]};
+prb.colors_trunk = {[0.1,0.1,0.2],[0.3,0.3,0.4],[0.5,0.5,0.6]};
+prb.marker = {'o','s','^'};
 
 prb.path_constraints = @(x,u) [norm(u) <= prb.umax;
                                u(3) >= prb.umin;
